@@ -32,6 +32,9 @@
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6 flex flex-col">
                         <h3 class="font-semibold text-lg text-gray-900 dark:text-gray-100 mb-2">{{ $articulo->nombre }}</h3>
                         <p class="text-sm text-gray-600 dark:text-gray-400 flex-grow">{{ Str::limit($articulo->descripcion, 100) }}</p>
+                        <br>
+                        <hr>
+                        <h2 class="text-sm text-gray-600 dark:text-gray-400 flex-grow">Cantidad: {{ $articulo->cantidad }}</p>
                         
                         <div class="mt-4">
                             {{-- Formulario para enviar la solicitud de préstamo --}}

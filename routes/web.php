@@ -41,5 +41,21 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::delete('/prestamo/{prestamo}', [PrestamoController::class, 'destroy'])->name('prestamos.destroy');
 });
 
+Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->group(function () {
+    Route::resource('inventario', InventarioController::class);
+    Route::resource('prestamo', PrestamoController::class);
+    Route::resource('articulosdañados', ArticulosdañadosController::class);
+    Route::resource('usuariosadmin', UsuariosController::class);
+   
+
+    Route::get('/prestamo', [PrestamoController::class, 'gestion'])->name('admin.prestamo.gestion');
+    Route::patch('/prestamo/{prestamo}/aprobar', [PrestamoController::class, 'aprobar'])->name('prestamo.aprobar');
+    Route::patch('/prestamo/{prestamo}/devolver', [PrestamoController::class, 'devolver'])->name('prestamo.devolver');
+    Route::delete('/prestamo/{prestamo}', [PrestamoController::class, 'destroy'])->name('prestamos.destroy');
+});
+
+
+
+
 
 require __DIR__.'/auth.php';
