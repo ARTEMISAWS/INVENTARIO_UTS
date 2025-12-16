@@ -14,7 +14,7 @@ class InventarioController extends Controller
      */
     public function index()
     {
-        $articulos = Articulo::with('categoria', 'ubicacion')->where('dado_baja', true)->latest()->paginate(10);
+        $articulos = Articulo::with('categoria', 'ubicacion')->where('estado', 'Disponible')->latest()->paginate(10);
         return view('inventario.index', compact('articulos'));
     }
 
