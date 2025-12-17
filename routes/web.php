@@ -21,41 +21,28 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::get('/prestamo', [PrestamoController::class, 'index'])->name('prestamo.index');
+    Route::get('/prestamos/{subcategoria?}', [PrestamoController::class, 'index'])->name('prestamos.index');
     Route::get('/mis-prestamos', [PrestamoController::class, 'misPrestamos'])->name('prestamos.mis-prestamos');
     Route::post('/prestamos/solicitar/{articulo}', [PrestamoController::class, 'solicitar'])->name('prestamos.solicitar');
+
+    //Route::get('/prestamos/verArticulos/{subcategoria}', [PrestamoController::class, 'verArticulos'])->name('admin.prestamos.verArticulos');
 });
 
 
 
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
+Route::middleware(['auth', 'role:admin,superadmin'])->prefix('admin')->group(function () {
     Route::resource('inventario', InventarioController::class);
     Route::resource('prestamo', PrestamoController::class);
     Route::resource('articulosdañados', ArticulosdañadosController::class);
     Route::resource('usuarios', UsuariosController::class);
-   
-
-    Route::get('/prestamo', [PrestamoController::class, 'gestion'])->name('admin.prestamo.gestion');
-    Route::patch('/prestamo/{prestamo}/aprobar', [PrestamoController::class, 'aprobar'])->name('prestamo.aprobar');
-    Route::patch('/prestamo/{prestamo}/devolver', [PrestamoController::class, 'devolver'])->name('prestamo.devolver');
+    
+    Route::patch('/prestamo/{prestamo}/aprobar', [PrestamoController::class, 'aprobar'])->name('prestamos.aprobar');
+    Route::patch('/prestamo/{prestamo}/devolver', [PrestamoController::class, 'devolver'])->name('prestamos.devolver');
     Route::delete('/prestamo/{prestamo}', [PrestamoController::class, 'destroy'])->name('prestamos.destroy');
+    
+    Route::get('/prestamos', [PrestamoController::class, 'index'])->name('admin.prestamos.index');
+    Route::get('/prestamos/verArticulos/{subcategoria}', [PrestamoController::class, 'verArticulos'])->name('admin.prestamos.verArticulos');
 });
-
-Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->group(function () {
-    Route::resource('inventario', InventarioController::class);
-    Route::resource('prestamo', PrestamoController::class);
-    Route::resource('articulosdañados', ArticulosdañadosController::class);
-    Route::resource('usuariosadmin', UsuariosController::class);
-   
-
-    Route::get('/prestamo', [PrestamoController::class, 'gestion'])->name('admin.prestamo.gestion');
-    Route::patch('/prestamo/{prestamo}/aprobar', [PrestamoController::class, 'aprobar'])->name('prestamo.aprobar');
-    Route::patch('/prestamo/{prestamo}/devolver', [PrestamoController::class, 'devolver'])->name('prestamo.devolver');
-    Route::delete('/prestamo/{prestamo}', [PrestamoController::class, 'destroy'])->name('prestamos.destroy');
-});
-
-
-
 
 
 require __DIR__.'/auth.php';

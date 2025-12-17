@@ -11,7 +11,7 @@
                 <div class="p-6 sm:p-8 bg-white dark:bg-gray-800">
                     
                     {{-- Formulario que apunta al método store del resource --}}
-                    <form method="POST" action="{{ route('usuariosadmin.store') }}">
+                    <form method="POST" action="{{ route('usuarios.store') }}">
                         @csrf
 
                         <div class="mb-4">
@@ -62,8 +62,7 @@
                                 class="mt-1 block w-full rounded-md shadow-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                                 <option value="" disabled selected>Seleccione un Rol</option>
                                 <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Administrador</option>
-                                <option value="superadmin" {{ old('role') == 'superadmin' ? 'selected' : '' }}>Super Administrador</option>
-                                <option value="invitado" {{ old('role') == 'invitado' ? 'selected' : '' }}>Invitado</option>
+                                <option value="usuario" {{ old('role') == 'usuario' ? 'selected' : '' }}>Usuario</option>
                                 {{-- Agrega más roles según necesites --}}
                             </select>
                             @error('role')

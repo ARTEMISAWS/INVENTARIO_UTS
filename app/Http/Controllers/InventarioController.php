@@ -12,10 +12,29 @@ class InventarioController extends Controller
     /**
      * Muestra una lista de todos los artículos del inventario.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $articulos = Articulo::with('categoria', 'ubicacion')->where('estado', 'Disponible')->latest()->paginate(10);
-        return view('inventario.index', compact('articulos'));
+        $search = $request->get('search');
+
+        $articulos = Articulo::with('categoria', 'ubicacion')
+            ->where('estado', 'Disponible') // Mantenemos tu filtro base
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('nombre', 'like', "%{$search}%")
+                    ->orWhere('codigo_uts', 'like', "%{$search}%")
+                    ->orWhere('calcomania', 'like', "%{$search}%")
+                    ->orWhere('descripcion', 'like', "%{$search}%")
+                    // Para buscar en la relación de categoría
+                    ->orWhereHas('categoria', function ($subQ) use ($search) {
+                        $subQ->where('nombre', 'like', "%{$search}%");
+                    });
+                });
+            })
+            ->latest()
+            ->paginate(10)
+            ->withQueryString(); // Esto mantiene el parámetro 'search' en los links de paginación
+
+        return view('inventario.index', compact('articulos', 'search'));
     }
 
     /**

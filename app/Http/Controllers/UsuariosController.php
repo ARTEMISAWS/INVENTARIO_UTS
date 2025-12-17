@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Prestamo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -13,71 +14,63 @@ class UsuariosController extends Controller
     /**
      * Muestra una lista de todos los usuarios.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Buscamos todos los usuarios excepto el que está actualmente logueado
-        // para evitar que el administrador se elimine a sí mismo por accidente.
-        
-        if(Auth::user()->role === 'superadmin'){
-           $usuarios = User::paginate(5);
-        }
-        
-        if(Auth::user()->role === 'admin'){
-            $usuarios = User::where('role', '!=', 'admin')->where('role', '!=', 'superadmin')->latest()->paginate(5);
-        }
-
-        return view('usuarios.index', compact('usuarios'));
-    }
-
-
-    /* public function index(Request $request)
-    {
-        // 1. Obtener el término de búsqueda de la URL
         $search = $request->get('search');
+        $userAuth = Auth::user();
 
-        // 2. Iniciar la consulta base (Query Builder)
-        $query = User::query();
+        // 1. Iniciamos la consulta con el filtro base (siempre activos)
+        $query = User::where('estado', 1);
 
-        // 3. Aplicar la lógica de Roles
-        if (Auth::user()->role === 'admin') {
-            // Un administrador NO ve a otros administradores o superadministradores
-            $query->where('role', '!=', 'admin')
-                  ->where('role', '!=', 'superadmin');
-        } 
-        // Nota: Si es 'superadmin', ve todos los usuarios (no se aplica un where inicial).
+        // 2. Aplicar lógica de Roles (Solo modificamos la consulta, NO paginamos aquí)
+        if ($userAuth->role === 'admin') {
+            // Admin: No ve admins ni superadmins
+            $query->whereNotIn('role', ['admin', 'superadmin']);
+        } elseif ($userAuth->role === 'superadmin') {
+            // Superadmin: No se ve a sí mismo (u otros superadmins)
+            $query->where('role', '!=', 'superadmin');
+        }
 
-        // 4. Aplicar el Filtro de Búsqueda Global (whereLike)
+        // 3. Filtro de Búsqueda
         if ($search) {
             $query->where(function ($q) use ($search) {
-                // El método 'where(function)' permite agrupar condiciones (OR)
-                // para buscar el texto en cualquiera de los campos.
-                $q->where('name', 'like', '%' . $search . '%')
-                  ->orWhere('cedula', 'like', '%' . $search . '%')
-                  ->orWhere('email', 'like', '%' . $search . '%')
-                  ->orWhere('role', 'like', '%' . $search . '%');
+                $q->where('name', 'like', "%{$search}%")
+                ->orWhere('cedula', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")
+                ->orWhere('role', 'like', "%{$search}%");
             });
         }
 
-        // 5. Ordenar y Paginar
-        $usuarios = $query->latest()->paginate(5);
+        // 4. Ordenar y Paginar (UNA SOLA VEZ al final)
+        $usuarios = $query->orderBy('id', 'DESC')->paginate(5);
         
-        // Mantener el término de búsqueda en la paginación
+        // Mantener búsqueda en links de paginación
         $usuarios->appends(['search' => $search]);
 
         return view('usuarios.index', compact('usuarios', 'search'));
-    } */
+    }
 
     /**
      * Elimina un usuario de la base de datos.
      */
     public function destroy(User $usuario)
     {
-        // Medida de seguridad: No permitir eliminar al usuario principal (ID 1)
-        if ($usuario->id === 1) {
-            return back()->with('error', 'No se puede eliminar al administrador principal.');
+        if($usuario->role === 'admin'){
+            User::where('id', $usuario->id)->update(['estado' => 0]);
         }
 
-        $usuario->delete();
+        if($usuario->role === 'usuario'){
+            // Antes de eliminar el usuario, verificar si tiene préstamos activos
+            $prestamosActivos = Prestamo::where('usuario_solicitante_id', $usuario->id)
+                                        ->where('estado', ['Activo'])
+                                        ->count();
+
+            if ($prestamosActivos > 0) {
+                return redirect()->route('usuarios.index')->with('error', 'No se puede eliminar el usuario porque tiene préstamos activos.');
+            }
+
+            User::where('id', $usuario->id)->update(['estado' => 0]);
+        }
 
         return redirect()->route('usuarios.index')->with('success', 'Usuario eliminado exitosamente.');
     }
@@ -116,7 +109,7 @@ class UsuariosController extends Controller
 
 
         // 3. Redirección
-        return redirect()->route('usuariosadmin.index')
+        return redirect()->route('usuarios.index')
                          ->with('success', 'Usuario ' . $user->name . ' creado exitosamente.');
     }
 

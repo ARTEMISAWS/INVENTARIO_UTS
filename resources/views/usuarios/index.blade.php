@@ -6,14 +6,14 @@
             </h2>
             {{-- En el futuro, aquí puedes poner un botón para crear usuarios --}}
             @if(Auth::user()->role === 'superadmin')
-                <a href="{{ route('usuariosadmin.create') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 ...">
+                <a href="{{ route('usuarios.create') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700">
                     Añadir Usuario
                 </a>
             @endif
         </div>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-1">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
@@ -29,6 +29,35 @@
                             <span class="block sm:inline">{{ session('error') }}</span>
                         </div>
                     @endif
+
+                    {{-- INICIO: Formulario de Filtro de Búsqueda Global --}}
+                    <form action="{{ route('usuarios.index') }}" method="GET" class="mb-6">
+                        <div class="flex items-center space-x-2">
+                            <div class="relative w-full">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                    <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+                                    </svg>
+                                </div>
+                                <input type="text" name="search" id="simple-search" value="{{ $search }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500" placeholder="Buscar por código, nombre, categoría...">
+                            </div>
+                            <button 
+                                type="submit" 
+                                class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring disabled:opacity-25 transition"
+                            >
+                                Buscar
+                            </button>
+                            {{-- Botón para limpiar la búsqueda --}}
+                            @if($search)
+                                <a href="{{ route('usuarios.index') }}" 
+                                   class="inline-flex items-center px-4 py-2 bg-gray-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-400 focus:outline-none focus:border-gray-600 focus:ring disabled:opacity-25 transition">
+                                    Limpiar
+                                </a>
+                            @endif
+                        </div>
+                    </form>
+                    {{-- FIN: Formulario de Filtro de Búsqueda Global --}}
+
 
                     <div class="relative overflow-x-auto">
                         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">

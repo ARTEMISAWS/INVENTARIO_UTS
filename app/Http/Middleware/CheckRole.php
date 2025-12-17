@@ -14,16 +14,19 @@ class CheckRole
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next, string $role): Response
+    public function handle(Request $request, Closure $next, ...$roles): Response
     {
-        // 1. Verifica si el usuario está autenticado
-        // 2. Verifica si el rol del usuario NO es el que se requiere
-        if (!Auth::check() || Auth::user()->role !== $role) {
-            // Si no tiene el rol, lo redirige o muestra un error 403 (Acceso Prohibido)
-            abort(403, 'ACCESO NO AUTORIZADO');
+        // 1. Verificar si el usuario está autenticado
+        if (!Auth::check()) {
+            abort(403, 'DEBE INICIAR SESIÓN');
         }
 
-        // Si el usuario tiene el rol correcto, la petición continúa.
+        // 2. Verificar si el rol del usuario está dentro de los roles permitidos
+        // $roles ahora es un array: ['admin', 'superadmin']
+        if (!in_array(Auth::user()->role, $roles)) {
+            abort(403, 'ACCESO NO AUTORIZADO: No tienes los permisos necesarios.');
+        }
+
         return $next($request);
     }
 }

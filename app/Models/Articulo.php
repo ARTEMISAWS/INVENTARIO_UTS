@@ -25,16 +25,9 @@ class Articulo extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'nombre',
-        'codigo_uts',
-        'descripcion',
-        'marca',
-        'modelo',
-        'numero_serie',
-        'estado',
-        'calcomania',
-        'categoria_id',
-        'ubicacion_id',
+        'nombre', 'codigo_uts', 'descripcion', 'marca', 'modelo',
+        'numero_serie', 'estado', 'calcomania', 'subcategoria_id', // Cambio aquí
+        'ubicacion_id'
     ];
 
     /*

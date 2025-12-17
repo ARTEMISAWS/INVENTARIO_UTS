@@ -74,19 +74,26 @@
     </div>
 </div>
 
-{{-- Si estamos editando, mostramos el campo de estado --}}
-@isset($articulo)
-<div>
-    <label for="estado" class="block text-sm font-medium">Estado</label>
-    <select name="estado" id="estado" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600">
-        <option value="disponible" @selected($articulo->estado == 'disponible')>Disponible</option>
-        <option value="prestado" @selected($articulo->estado == 'prestado')>Prestado</option>
-        <option value="en_mantenimiento" @selected($articulo->estado == 'en_mantenimiento')>En Mantenimiento</option>
-        <option value="de_baja" @selected($articulo->estado == 'de_baja')>De Baja</option>
-    </select>
-</div>
-@endisset
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    {{-- Si estamos editando, mostramos el campo de estado --}}
+    @isset($articulo)
+    <div>
+        <label for="estado" class="block text-sm font-medium">Estado</label>
+        <select name="estado" id="estado" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600">
+            <option value="disponible" @selected($articulo->estado == 'disponible')>Disponible</option>
+            <option value="prestado" @selected($articulo->estado == 'prestado')>Prestado</option>
+            <option value="en_mantenimiento" @selected($articulo->estado == 'en_mantenimiento')>En Mantenimiento</option>
+            <option value="de_baja" @selected($articulo->estado == 'de_baja')>De Baja</option>
+        </select>
+    </div>
+    @endisset
 
+    <div>
+        <label for="cantidad" class="block text-sm font-medium"> Cantidad </label>
+        <input type="text" name="cantidad" id="cantidad" value="{{ old('cantidad', $articulo->cantidad ?? '') }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600">
+    </div>
+    
+</div>
 
 {{-- Botón de Guardar --}}
 <div class="flex justify-end pt-4">

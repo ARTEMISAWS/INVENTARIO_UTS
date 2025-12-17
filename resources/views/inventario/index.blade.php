@@ -11,7 +11,7 @@
         </div>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-1">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
@@ -28,18 +28,40 @@
                         </div>
                     @endif
 
+
+                    <div class="mb-6">
+                        <form action="{{ route('inventario.index') }}" method="GET" class="flex items-center max-w-md">
+                            <label for="simple-search" class="sr-only">Buscar</label>
+                            <div class="relative w-full">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                    <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+                                    </svg>
+                                </div>
+                                <input type="text" name="search" id="simple-search" value="{{ $search }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500" placeholder="Buscar por código, nombre, categoría...">
+                            </div>
+                            <button type="submit" class="p-2.5 ml-2 text-sm font-medium text-white bg-indigo-600 rounded-lg border border-indigo-700 hover:bg-indigo-800 focus:ring-4 focus:outline-none focus:ring-indigo-300">
+                                <span>Buscar</span>
+                            </button>
+                            @if($search)
+                                <a href="{{ route('inventario.index') }}" class="p-2.5 ml-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">
+                                    Limpiar
+                                </a>
+                            @endif
+                        </form>
+                    </div>
+
                     <div class="relative overflow-x-auto">
                         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                            {{-- ... (código de la tabla aquí) ... --}}
                             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                                <tr>
-                                    
+                                <tr>        
                                     <th scope="col" class="px-6 py-3">Código</th>
                                     <th scope="col" class="px-6 py-3">Nombre</th>
                                     <th scope="col" class="px-6 py-3">Calcomanía</th>
                                     <th scope="col" class="px-6 py-3">Descripción</th>
                                     <th scope="col" class="px-6 py-3">Categoría</th>
                                     <th scope="col" class="px-6 py-3">Estado</th>
+                                    <th scope="col" class="px-6 py-3">Cantidad</th>
                                     <th scope="col" class="px-6 py-3">Acciones</th>
                                 </tr>
                             </thead>
@@ -52,6 +74,7 @@
                                         <td class="px-6 py-4">{{ $articulo->descripcion }}</td>
                                         <td class="px-6 py-4">{{ $articulo->categoria->nombre }}</td>
                                         <td class="px-6 py-4">{{ $articulo->estado }}</td>
+                                        <td class="px-6 py-4">{{ $articulo->cantidad }}</td>
                                         <td class="px-6 py-4 flex items-center space-x-2">
                                             <a href="{{ route('inventario.edit', $articulo) }}" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
