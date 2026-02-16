@@ -13,7 +13,12 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    $totalArticulos = \App\Models\Articulo::count();
+    $articulosPrestados = \App\Models\Articulo::where('estado', 'prestado')->count();
+    $articulosDisponibles = \App\Models\Articulo::where('estado', 'disponible')->count();
+    $articulosMantenimiento = \App\Models\Articulo::where('estado', 'en_mantenimiento')->count();
+
+    return view('dashboard', compact('totalArticulos', 'articulosPrestados', 'articulosDisponibles', 'articulosMantenimiento'));
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
@@ -23,26 +28,34 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/prestamos/{subcategoria?}', [PrestamoController::class, 'index'])->name('prestamos.index');
     Route::get('/mis-prestamos', [PrestamoController::class, 'misPrestamos'])->name('prestamos.mis-prestamos');
-    Route::post('/prestamos/solicitar/{articulo}', [PrestamoController::class, 'solicitar'])->name('prestamos.solicitar');
 
-    //Route::get('/prestamos/verArticulos/{subcategoria}', [PrestamoController::class, 'verArticulos'])->name('admin.prestamos.verArticulos');
+    // Rutas del Carrito de Compras (Solicitud Múltiple)
+    Route::get('/carrito', [\App\Http\Controllers\CarritoController::class, 'index'])->name('carrito.index');
+    Route::post('/carrito/agregar/{articulo}', [\App\Http\Controllers\CarritoController::class, 'agregar'])->name('carrito.agregar');
+    Route::delete('/carrito/eliminar/{id}', [\App\Http\Controllers\CarritoController::class, 'eliminar'])->name('carrito.eliminar');
+    Route::post('/carrito/vaciar', [\App\Http\Controllers\CarritoController::class, 'vaciar'])->name('carrito.vaciar');
+    Route::post('/carrito/procesar', [\App\Http\Controllers\CarritoController::class, 'procesar'])->name('carrito.procesar');
+
+    // Route::post('/prestamos/solicitar/{articulo}', [PrestamoController::class, 'solicitar'])->name('prestamos.solicitar'); // Deprecated
 });
 
 
 
-Route::middleware(['auth', 'role:admin,superadmin'])->prefix('admin')->group(function () {
+Route::middleware(['auth', 'role:admin,superadmin'])->group(function () {
     Route::resource('inventario', InventarioController::class);
     Route::resource('prestamo', PrestamoController::class);
     Route::resource('articulosdañados', ArticulosdañadosController::class);
     Route::resource('usuarios', UsuariosController::class);
-    
+
+    Route::post('/prestamo/vistaAprobacion', [PrestamoController::class, 'vistaAprobacion'])->name('prestamos.vistaAprobacion');
+    Route::post('/prestamo/guardarAprobacion', [PrestamoController::class, 'guardarAprobacion'])->name('prestamos.guardarAprobacion');
     Route::patch('/prestamo/{prestamo}/aprobar', [PrestamoController::class, 'aprobar'])->name('prestamos.aprobar');
     Route::patch('/prestamo/{prestamo}/devolver', [PrestamoController::class, 'devolver'])->name('prestamos.devolver');
     Route::delete('/prestamo/{prestamo}', [PrestamoController::class, 'destroy'])->name('prestamos.destroy');
-    
-    Route::get('/prestamos', [PrestamoController::class, 'index'])->name('admin.prestamos.index');
-    Route::get('/prestamos/verArticulos/{subcategoria}', [PrestamoController::class, 'verArticulos'])->name('admin.prestamos.verArticulos');
+
+    Route::get('/prestamos', [PrestamoController::class, 'index'])->name('prestamos.index');
+    Route::get('/prestamos/verArticulos/{subcategoria}', [PrestamoController::class, 'verArticulos'])->name('prestamos.verArticulos');
 });
 
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

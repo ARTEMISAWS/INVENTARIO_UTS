@@ -25,8 +25,15 @@ class Articulo extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'nombre', 'codigo_uts', 'descripcion', 'marca', 'modelo',
-        'numero_serie', 'estado', 'calcomania', 'subcategoria_id', // Cambio aquí
+        'nombre',
+        'codigo_uts',
+        'descripcion',
+        'marca',
+        'modelo',
+        'numero_serie',
+        'estado',
+        'calcomania',
+        'subcategoria_id', // Cambio aquí
         'ubicacion_id'
     ];
 
@@ -70,5 +77,10 @@ class Articulo extends Model
     public function reportes()
     {
         return $this->hasMany(ReporteMantenimiento::class);
+    }
+
+    public function subcategoria()
+    {
+        return $this->belongsTo(Subcategoria::class);
     }
 }

@@ -14,6 +14,7 @@
                         @csrf
                         {{-- Aquí incluiremos el formulario --}}
                         @include('inventario._form')
+                        @include('inventario.form_scripts')
                     </form>
                 </div>
             </div>

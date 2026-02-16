@@ -7,7 +7,7 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            
+
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
 
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md flex flex-col items-center text-center">
@@ -17,7 +17,7 @@
                         </svg>
                     </div>
                     <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200">Total de Artículos</h3>
-                    <p class="mt-2 text-4xl font-bold text-gray-900 dark:text-white">150</p>
+                    <p class="mt-2 text-4xl font-bold text-gray-900 dark:text-white">{{ $totalArticulos }}</p>
                 </div>
 
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md flex flex-col items-center text-center">
@@ -27,7 +27,7 @@
                         </svg>
                     </div>
                     <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200">Artículos Prestados</h3>
-                    <p class="mt-2 text-4xl font-bold text-gray-900 dark:text-white">150</p>
+                    <p class="mt-2 text-4xl font-bold text-gray-900 dark:text-white">{{ $articulosPrestados }}</p>
                 </div>
 
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md flex flex-col items-center text-center">
@@ -37,7 +37,7 @@
                         </svg>
                     </div>
                     <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200">Artículos Disponibles</h3>
-                    <p class="mt-2 text-4xl font-bold text-gray-900 dark:text-white">150</p>
+                    <p class="mt-2 text-4xl font-bold text-gray-900 dark:text-white">{{ $articulosDisponibles }}</p>
                 </div>
 
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md flex flex-col items-center text-center">
@@ -46,11 +46,11 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
                         </svg>
                     </div>
-                    <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200">Artículos Dañados</h3>
-                    <p class="mt-2 text-4xl font-bold text-gray-900 dark:text-white">150</p>
+                    <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200">Artículos en Mantenimiento</h3>
+                    <p class="mt-2 text-4xl font-bold text-gray-900 dark:text-white">{{ $articulosMantenimiento }}</p>
                 </div>
 
             </div>
-            </div>
+        </div>
     </div>
 </x-app-layout>

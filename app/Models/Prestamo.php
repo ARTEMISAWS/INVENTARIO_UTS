@@ -22,6 +22,7 @@ class Prestamo extends Model
         'estado',
         'observaciones_prestamo',
         'observaciones_devolucion',
+        'id_padre',
     ];
 
     /**
@@ -51,7 +52,7 @@ class Prestamo extends Model
     {
         return $this->belongsTo(User::class, 'usuario_despacha_id');
     }
-    
+
     public function usuario_recibe()
     {
         return $this->belongsTo(User::class, 'usuario_recibe_id');

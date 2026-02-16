@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Articulo;
 use App\Models\Categoria;
+use App\Models\Subcategoria;
 use App\Models\Ubicacion;
 use Illuminate\Http\Request;
 
@@ -15,24 +16,26 @@ class InventarioController extends Controller
     public function index(Request $request)
     {
         $search = $request->get('search');
+        $estado = $request->get('estado');
 
-        $articulos = Articulo::with('categoria', 'ubicacion')
-            ->where('estado', 'Disponible') // Mantenemos tu filtro base
+        $articulos = Articulo::with('subcategoria.categoria', 'ubicacion')
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('nombre', 'like', "%{$search}%")
-                    ->orWhere('codigo_uts', 'like', "%{$search}%")
-                    ->orWhere('calcomania', 'like', "%{$search}%")
-                    ->orWhere('descripcion', 'like', "%{$search}%")
-                    // Para buscar en la relación de categoría
-                    ->orWhereHas('categoria', function ($subQ) use ($search) {
-                        $subQ->where('nombre', 'like', "%{$search}%");
-                    });
+                        ->orWhere('codigo_uts', 'like', "%{$search}%")
+                        ->orWhere('calcomania', 'like', "%{$search}%")
+                        ->orWhere('descripcion', 'like', "%{$search}%")
+                        ->orWhereHas('subcategoria', function ($subQ) use ($search) {
+                            $subQ->where('nombre', 'like', "%{$search}%");
+                        });
                 });
+            })
+            ->when($estado, function ($query, $estado) {
+                return $query->where('estado', $estado);
             })
             ->latest()
             ->paginate(10)
-            ->withQueryString(); // Esto mantiene el parámetro 'search' en los links de paginación
+            ->withQueryString();
 
         return view('inventario.index', compact('articulos', 'search'));
     }
@@ -43,8 +46,9 @@ class InventarioController extends Controller
     public function create()
     {
         $categorias = Categoria::all();
+        $subcategorias = Subcategoria::all();
         $ubicaciones = Ubicacion::all();
-        return view('inventario.create', compact('categorias', 'ubicaciones'));
+        return view('inventario.create', compact('categorias', 'subcategorias', 'ubicaciones'));
     }
 
     /**
@@ -60,12 +64,10 @@ class InventarioController extends Controller
             'modelo'      => 'required|nullable|string|max:255',
             'numero_serie' => 'required|nullable|string|max:255|unique:articulos',
             'calcomania'   => 'required|nullable|string|max:255',
-            'categoria_id' => 'required|exists:categorias,id',
+            'subcategoria_id' => 'required|exists:subcategorias,id',
             'ubicacion_id' => 'required|exists:ubicaciones,id',
         ]);
-
         Articulo::create($request->all());
-
         return redirect()->route('inventario.index')->with('success', 'Artículo creado exitosamente.');
     }
 
@@ -77,8 +79,9 @@ class InventarioController extends Controller
     {
         $articulo = Articulo::find($idArticulo);
         $categorias = Categoria::all();
+        $subcategorias = Subcategoria::all();
         $ubicaciones = Ubicacion::all();
-        return view('inventario.edit', compact('articulo', 'categorias', 'ubicaciones'));
+        return view('inventario.edit', compact('articulo', 'categorias', 'subcategorias', 'ubicaciones'));
     }
 
     /**
@@ -108,18 +111,24 @@ class InventarioController extends Controller
      */
     public function destroy($idArticulo)
     {
-        $articulo = Articulo::find($idArticulo);
+        try {
+            $articulo = Articulo::findOrFail($idArticulo);
 
-        // Opcional: Añadir lógica para no permitir borrar si está prestado.
-        if ($articulo->estado === 'prestado') {
-            return back()->with('error', 'No se puede eliminar un artículo que está actualmente prestado.');
-        }
+            // Verificar préstamos
+            if ($articulo->prestamos()->exists()) {
+                return back()->with('error', 'No se puede eliminar el artículo porque tiene historial de préstamos.');
+            }
 
-        if ($articulo->estado === 'de_baja') {
-            $articulo->dado_baja = 2;
+            // Verificar si está prestado actualmente
+            if ($articulo->estado === 'prestado') {
+                return back()->with('error', 'No se puede eliminar un artículo que está actualmente prestado.');
+            }
+
+            $articulo->estado = 'inactivo';
             $articulo->save();
+            return redirect()->route('inventario.index')->with('success', 'Artículo eliminado exitosamente.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Ocurrió un error al intentar eliminar el artículo.');
         }
-
-        return redirect()->route('inventario.index')->with('success', 'Artículo eliminado exitosamente.');
     }
 }

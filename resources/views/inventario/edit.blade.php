@@ -15,6 +15,7 @@
                         @method('PUT')
                         {{-- Reutilizamos el mismo formulario --}}
                         @include('inventario._form')
+                        @include('inventario.form_scripts')
                     </form>
                 </div>
             </div>
