@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            Aprobar Solicitud de Préstamo
+            Registrar Devolución de Préstamo
         </h2>
     </x-slot>
 
@@ -9,9 +9,8 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
 
-                <form action="{{ route('prestamos.guardarAprobacion') }}" method="POST">
+                <form action="{{ route('prestamos.guardarDevolucion') }}" method="POST">
                     @csrf
-                    {{-- Mantener los identificadores de la consulta original --}}
                     <input type="hidden" name="usuario_solicitante_id" value="{{ request('usuario_solicitante_id') }}">
                     <input type="hidden" name="id_prestamo" value="{{ request('id_prestamo') }}">
 
@@ -25,18 +24,18 @@
                             <p class="text-xs text-gray-500">{{ $misProductos->first()?->usuario_solicitante?->email ?? '' }}</p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Despachado por</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Recibido por</p>
                             <p class="font-bold text-gray-900 dark:text-white text-lg">{{ Auth::user()->name }}</p>
-                            <p class="text-xs text-green-600 block">Autenticado ahora</p>
+                            <p class="text-xs text-indigo-600 block">Autenticado ahora</p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Fecha y Hora de Aprobación</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Fecha y Hora de Recepción</p>
                             <p class="font-bold text-gray-900 dark:text-white text-lg">{{ now()->format('d/m/Y h:i A') }}</p>
                         </div>
                     </div>
 
-                    {{-- Lista de Artículos --}}
-                    <h3 class="font-semibold text-lg text-gray-800 dark:text-gray-200 mb-4">Artículos Solicitados</h3>
+                    {{-- Lista de Artículos a Devolver --}}
+                    <h3 class="font-semibold text-lg text-gray-800 dark:text-gray-200 mb-4">Artículos a Devolver</h3>
                     <div class="overflow-x-auto mb-8 border rounded-lg shadow-sm">
                         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -76,39 +75,25 @@
                     <div class="bg-gray-50 dark:bg-gray-700/30 p-6 rounded-lg border border-gray-100 dark:border-gray-700/50">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                            <div class="flex flex-col space-y-4">
-                                <div>
-                                    <label for="fecha_devolucion_estimada" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                                        Fecha y Hora Estimada de Devolución
-                                    </label>
-                                    <input type="datetime-local" id="fecha_devolucion_estimada" name="fecha_devolucion_estimada" required
-                                        min="{{ now()->format('Y-m-d\TH:i') }}"
-                                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
-                                    <p class="mt-1 text-xs text-gray-500">Seleccione cuándo se espera que el usuario devuelva los artículos.</p>
-                                </div>
-
-                                <div>
-                                    <label for="dependencia_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                                        Dependencia
-                                    </label>
-                                    <select id="dependencia_id" name="dependencia_id" required
-                                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
-                                        <option value="" disabled selected>Seleccione una dependencia...</option>
-                                        @foreach(\App\Models\Dependencia::all() as $dependencia)
-                                        <option value="{{ $dependencia->id }}">{{ $dependencia->nombre }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                            <div>
+                                <label for="fecha_devolucion_real" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                    Fecha y Hora de Recepción (Real)
+                                </label>
+                                <input type="datetime-local" id="fecha_devolucion_real" name="fecha_devolucion_real" required
+                                    value="{{ now()->format('Y-m-d\TH:i') }}"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
+                                <p class="mt-1 text-xs text-gray-500">Puedes ajustar la hora si el equipo fue entregado antes de registrarlo en el sistema.</p>
                             </div>
 
                             <div>
-                                <label for="observaciones_prestamo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                                    Descripción General / Observaciones
+                                <label for="observaciones_devolucion" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                    Novedades al recibir (Opcional)
                                 </label>
-                                <textarea id="observaciones_prestamo" name="observaciones_prestamo" rows="6"
-                                    class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white h-full"
-                                    placeholder="Agregue notas sobre el estado de entrega o condiciones especiales..."></textarea>
+                                <textarea id="observaciones_devolucion" name="observaciones_devolucion" rows="3"
+                                    class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+                                    placeholder="Indique si los equipos presentan algún daño o novedad..."></textarea>
                             </div>
+
                         </div>
                     </div>
 
@@ -117,8 +102,8 @@
                         <a href="{{ route('prestamos.index') }}" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white font-medium text-sm px-4">
                             Cancelar
                         </a>
-                        <button type="submit" class="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">
-                            Confirmar y Aprobar Préstamo
+                        <button type="submit" class="text-white bg-indigo-700 hover:bg-indigo-800 focus:ring-4 focus:outline-none focus:ring-indigo-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-indigo-600 dark:hover:bg-indigo-700 dark:focus:ring-indigo-800">
+                            Confirmar Devolución
                         </button>
                     </div>
                 </form>

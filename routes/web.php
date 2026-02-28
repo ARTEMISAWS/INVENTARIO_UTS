@@ -47,8 +47,14 @@ Route::middleware(['auth', 'role:admin,superadmin'])->group(function () {
     Route::resource('articulosdañados', ArticulosdañadosController::class);
     Route::resource('usuarios', UsuariosController::class);
 
+    // --- RUTAS DE APROBACIÓN ---
     Route::post('/prestamo/vistaAprobacion', [PrestamoController::class, 'vistaAprobacion'])->name('prestamos.vistaAprobacion');
     Route::post('/prestamo/guardarAprobacion', [PrestamoController::class, 'guardarAprobacion'])->name('prestamos.guardarAprobacion');
+
+    // --- RUTAS DE DEVOLUCIÓN  ---
+    Route::post('/prestamo/vistaDevolucion', [PrestamoController::class, 'vistaDevolucion'])->name('prestamos.vistaDevolucion');
+    Route::post('/prestamo/guardarDevolucion', [PrestamoController::class, 'guardarDevolucion'])->name('prestamos.guardarDevolucion');
+
     Route::patch('/prestamo/{prestamo}/aprobar', [PrestamoController::class, 'aprobar'])->name('prestamos.aprobar');
     Route::patch('/prestamo/{prestamo}/devolver', [PrestamoController::class, 'devolver'])->name('prestamos.devolver');
     Route::delete('/prestamo/{prestamo}', [PrestamoController::class, 'destroy'])->name('prestamos.destroy');

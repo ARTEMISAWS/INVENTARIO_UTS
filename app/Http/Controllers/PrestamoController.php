@@ -73,9 +73,9 @@ class PrestamoController extends Controller
                 ->when($search, function ($query) use ($search) {
                     $query->where(function ($q) use ($search) {
                         $q->where('nombre', 'like', "%{$search}%")
-                        ->orWhere('marca', 'like', "%{$search}%")
-                        ->orWhere('modelo', 'like', "%{$search}%")
-                        ->orWhere('codigo_uts', 'like', "%{$search}%"); // Agregado según tu esquema
+                            ->orWhere('marca', 'like', "%{$search}%")
+                            ->orWhere('modelo', 'like', "%{$search}%")
+                            ->orWhere('codigo_uts', 'like', "%{$search}%"); // Agregado según tu esquema
                     });
                 })
                 // Filtro por subcategoría lateral
@@ -86,7 +86,7 @@ class PrestamoController extends Controller
                 ->paginate(12)
                 ->withQueryString();
 
-                /* dd($articulosDisponibles->toArray()); */
+            /* dd($articulosDisponibles->toArray()); */
 
             return view('prestamo.index', compact('categorias', 'articulosDisponibles', 'search'));
         }
@@ -120,10 +120,10 @@ class PrestamoController extends Controller
     {
 
         $misPrestamos = Prestamo::where('usuario_solicitante_id', Auth::user()->id)
-                                ->where('id_padre', '!=', null)
-                               ->with(['articulo', 'padre'])
-                                ->latest()
-                                ->paginate(10);
+            ->where('id_padre', '!=', null)
+            ->with(['articulo', 'padre'])
+            ->latest()
+            ->paginate(10);
         return view('prestamo.mis-prestamos', compact('misPrestamos'));
     }
 
@@ -135,31 +135,32 @@ class PrestamoController extends Controller
             })
             ->with('articulo.subcategoria.categoria')
             ->latest()->get();
+
         return view('prestamo.vistaAprobacion', compact('misProductos'));
     }
 
     public function guardarAprobacion(Request $request)
     {
+        // 1. Validamos que venga la dependencia
         $request->validate([
             'fecha_devolucion_estimada' => 'required|date',
             'observaciones_prestamo' => 'nullable|string',
             'usuario_solicitante_id' => 'required',
-            'id_prestamo' => 'required'
+            'id_prestamo' => 'required',
+            'dependencia_id' => 'required|exists:dependencias,id' // Validamos la dependencia
         ]);
 
         $prestamos = Prestamo::where('id', $request->id_prestamo)->first();
+
+        // 2. Guardamos la dependencia junto con el resto de datos
         $prestamos->update([
             'fecha_devolucion_estimada' => $request->fecha_devolucion_estimada,
             'observaciones_prestamo' => $request->observaciones_prestamo,
+            'dependencia_id' => $request->dependencia_id, // Aquí guardamos el campo
             'estado' => 'Activo',
             'usuario_despacha_id' => Auth::id(),
             'fecha_prestamo' => now(),
         ]);
-
-
-        /*  if ($prestamos->isEmpty()) {
-            return redirect()->route('prestamos.index')->with('error', 'No se encontraron préstamos pendientes para aprobar con esos criterios.');
-        } */
 
         return redirect()->route('prestamos.index')->with('success', 'Solicitud aprobada correctamente.');
     }
@@ -265,5 +266,52 @@ class PrestamoController extends Controller
 
         session()->forget('carrito'); // Limpiamos el carrito
         return redirect()->route('prestamos.mis-prestamos')->with('success', 'Solicitud enviada con éxito.');
+    }
+
+
+
+    public function vistaDevolucion(Request $request)
+    {
+        // Traemos los productos igual que en la vista de aprobación
+        $misProductos = Prestamo::where('usuario_solicitante_id', $request->usuario_solicitante_id)
+            ->where(function ($query) use ($request) {
+                $query->where('id_padre', $request->id_prestamo);
+            })
+            ->with('articulo.subcategoria.categoria')
+            ->latest()->get();
+
+        return view('prestamo.vistaDevolucion', compact('misProductos'));
+    }
+
+    public function guardarDevolucion(Request $request)
+    {
+        $request->validate([
+            'id_prestamo' => 'required',
+            'observaciones_devolucion' => 'nullable|string',
+            'fecha_devolucion_real' => 'required|date', // Validamos la fecha que ingresa el admin
+        ]);
+
+        // 1. Actualizamos el PADRE  a 'Devuelto'
+        Prestamo::where('id', $request->id_prestamo)
+            ->update([
+                'estado' => 'Devuelto',
+                'usuario_recibe_id' => Auth::id(),
+                'fecha_devolucion_real' => $request->fecha_devolucion_real, // Guardamos la fecha del formulario
+                'observaciones_devolucion' => $request->observaciones_devolucion,
+            ]);
+
+        // 2. Liberamos los artículos (los pasamos a 'disponible')
+        $articulos = Prestamo::where('id_padre', $request->id_prestamo)
+            ->whereNotNull('articulo_id')
+            ->with('articulo')
+            ->get();
+
+        foreach ($articulos as $articulo) {
+            if ($articulo->articulo) {
+                Articulo::where('id', $articulo->articulo_id)->update(['estado' => 'disponible']);
+            }
+        }
+
+        return redirect()->route('prestamos.index')->with('success', 'Devolución registrada con éxito. Los artículos están disponibles nuevamente.');
     }
 }

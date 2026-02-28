@@ -30,7 +30,6 @@
                     <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                         <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                             <tr>
-                                <!-- <th class="px-6 py-3">Artículo</th> -->
                                 <th class="px-6 py-3">Solicitante</th>
                                 <th class="px-6 py-3">Estado</th>
                                 <th class="px-6 py-3">Fecha Solicitud</th>
@@ -41,9 +40,6 @@
                         <tbody>
                             @forelse($prestamos as $prestamo)
                             <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                <!--  <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
-                                        { { $prestamo->articulo->nombre }}
-                                    </td> -->
                                 <td class="px-6 py-4">
                                     {{ $prestamo->usuario_solicitante->name }}
                                 </td>
@@ -72,9 +68,18 @@
                                     </form>
                                     @endif
 
-                                    @if(Auth::user()->role === 'admin' && $prestamo->estado === 'Activo')
+                                    <!-- @if($prestamo->estado === 'Activo')
                                     <form action="{{ route('prestamos.devolver', $prestamo) }}" method="POST">
                                         @csrf @method('PATCH')
+                                        <button class="text-indigo-600 hover:underline font-bold">Recibir</button>
+                                    </form>
+                                    @endif -->
+
+                                    @if($prestamo->estado === 'Activo')
+                                    <form action="{{ route('prestamos.vistaDevolucion') }}" method="POST" class="flex items-center space-x-2">
+                                        <input type="hidden" name="usuario_solicitante_id" value="{{ $prestamo->usuario_solicitante_id }}">
+                                        <input type="hidden" name="id_prestamo" value="{{ $prestamo->id }}">
+                                        @csrf
                                         <button class="text-indigo-600 hover:underline font-bold">Recibir</button>
                                     </form>
                                     @endif

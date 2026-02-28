@@ -7,6 +7,7 @@ use App\Models\Articulo;
 use App\Models\Prestamo;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class CarritoController extends Controller
 {
@@ -50,12 +51,12 @@ class CarritoController extends Controller
             return back()->with('info', 'El artículo ya está en tu lista de solicitud.');
         }
         // 4. Verificar restricción: 1 artículo por categoría
-        foreach ($carrito as $id => $item) {
+        /*  foreach ($carrito as $id => $item) {
             // Nota: Guardamos categoria_id en el carrito para facilitar esta validación sin consultar DB
             if ($item['subcategoria_id'] == $data->subcategoria_id) {
                 return back()->with('error', 'Solo puedes solicitar un artículo por categoría en cada préstamo. Ya tienes un artículo de la categoría: ' . $data->subcategoria->nombre);
             }
-        }
+        } */
 
         // 5. Agregar al carrito
         $carrito[$data->id] = [
@@ -97,13 +98,7 @@ class CarritoController extends Controller
         return back()->with('success', 'Solicitud vaciada correctamente.');
     }
 
-    /**
-     * Procesa el carrito y crea los registros de préstamos.
-     * Implementa la lógica de "Un préstamo con múltiples artículos" o "Múltiples préstamos agrupados".
-     * Según tu estructura actual, Prestamo es por artículo. Así que crearemos múltiples registros,
-     * pero quizás quieras un identificador de 'lote' o 'grupo' si decides cambiar la BD.
-     * Por ahora, seguiremos el modelo actual: 1 fila por artículo en 'prestamos'.
-     */
+
     public function procesar()
     {
         $carrito = Session::get('carrito', []);
@@ -113,8 +108,10 @@ class CarritoController extends Controller
         }
 
         // Verificación final de préstamo activo (por seguridad)
+        // Agregamos whereNull('id_padre') para que busque solo en las cabeceras
         $prestamoActivo = Prestamo::where('usuario_solicitante_id', Auth::id())
             ->whereIn('estado', ['Pendiente', 'Activo'])
+            ->whereNull('id_padre')
             ->exists();
 
         if ($prestamoActivo) {
@@ -122,30 +119,30 @@ class CarritoController extends Controller
                 ->with('error', 'No puedes realizar una nueva solicitud mientras tengas un préstamo activo o pendiente.');
         }
 
-        $parentId = null;
+        DB::transaction(function () use ($carrito) {
 
-        foreach ($carrito as $id => $item) {
-            // Verificar disponibilidad real antes de crear
-            $articulo = Articulo::find($id);
-            if (!$articulo || $articulo->estado !== 'disponible') {
-                // Podríamos detener todo o saltar este.
-                // Saltemos para no bloquear, pero avisar (implementación simple por ahora)
-                continue;
-            }
-
-            $prestamo = Prestamo::create([
-                'articulo_id' => $id,
+            // 1. Crear la CABECERA del préstamo (El Padre)
+            $padre = Prestamo::create([
+                'articulo_id' => null, // La cabecera no lleva artículo
                 'usuario_solicitante_id' => Auth::id(),
-                'fecha_prestamo'         => now(), // Fecha solicitud
-                'fecha_devolucion_estimada'  => now()->addHours(2), // Ejemplo: 2 horas por defecto
-                'estado'  => 'Pendiente',
-                'id_padre' => $parentId,
+                'fecha_prestamo'         => now(),
+                'fecha_devolucion_estimada'  => now()->addHours(2),
+                'estado'  => 'Pendiente', // <--- SOLO EL PADRE LLEVA EL ESTADO
+                'id_padre' => null,
             ]);
 
-            if ($parentId === null) {
-                $parentId = $prestamo->id;
+            // 2. Crear los DETALLES del préstamo (Los Hijos)
+            foreach ($carrito as $id => $item) {
+                Prestamo::create([
+                    'articulo_id' => $id,
+                    'usuario_solicitante_id' => Auth::id(),
+                    'fecha_prestamo'         => now(),
+                    'fecha_devolucion_estimada'  => now()->addHours(2),
+                    'estado'  => null, // Dejamos el estado nulo en los hijos
+                    'id_padre' => $padre->id, // Los amarramos al padre creado arriba
+                ]);
             }
-        }
+        });
 
         // Vaciar carrito
         Session::forget('carrito');

@@ -23,6 +23,7 @@ class Prestamo extends Model
         'observaciones_prestamo',
         'observaciones_devolucion',
         'id_padre',
+        'dependencia_id'
     ];
 
     /**
@@ -61,5 +62,10 @@ class Prestamo extends Model
     public function padre()
     {
         return $this->belongsTo(Prestamo::class, 'id_padre');
+    }
+
+    public function dependencia()
+    {
+        return $this->belongsTo(Dependencia::class, 'dependencia_id');
     }
 }
