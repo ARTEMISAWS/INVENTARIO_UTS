@@ -85,15 +85,22 @@
                             <h3 class="font-bold text-gray-900 dark:text-gray-100 leading-tight h-12 overflow-hidden">{{ $articulo->nombre }}</h3>
                         </div>
 
-                        <div class="p-4 flex-grow">
+                        <div class="pt-2 pl-4 flex-grow">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                <strong>Categoria:</strong> {{ $articulo->subcategoria->categoria->nombre }}
+                            </p>
+                        </div>
+
+                        <div class="pb-2 pl-4 flex-grow">
                             <p class="text-xs text-gray-500 dark:text-gray-400 mb-2"><strong>Modelo:</strong> {{ $articulo->modelo ?? 'N/A' }}</p>
                             <p class="text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
                                 {{ $articulo->descripcion }}
                             </p>
                         </div>
 
+
                         <div class="p-4 bg-gray-50 dark:bg-gray-900/30">
-                            <form action="{{ route('carrito.agregar', $articulo) }}" method="POST">
+                            <form action="{{ route('carrito.agregar', $articulo->id) }}" method="POST">
                                 @csrf
                                 <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-lg font-bold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-150">
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

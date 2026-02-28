@@ -59,28 +59,34 @@ class PrestamoController extends Controller
         }
 
         if (Auth::user()->role === 'usuario') {
-            // 1. Cargamos categorías con sus subcategorías y el conteo de artículos disponibles
+            // 1. Cargamos categorías con sus subcategorías
+            // Usamos withCount en las subcategorías para contar artículos filtrados por estado 'disponible'
             $categorias = Categoria::with(['subcategorias' => function ($query) {
                 $query->withCount(['articulos as cantidad_disponible' => function ($q) {
-                    $q->where('estado', 'disponible'); // Filtramos solo los que están en buen estado
+                    $q->where('estado', 'disponible');
                 }]);
             }])->get();
 
-            // 2. Cargamos los artículos aplicando filtros (Buscador o Categoría lateral)
-            $articulosDisponibles = Articulo::where('estado', 'disponible')
+            // 2. Cargamos los artículos aplicando filtros
+            $articulosDisponibles = Articulo::with('subcategoria.categoria')->where('estado', 'disponible')
+                // El buscador ahora incluye también el campo 'codigo_uts' que aparece en tu nuevo modelo
                 ->when($search, function ($query) use ($search) {
                     $query->where(function ($q) use ($search) {
                         $q->where('nombre', 'like', "%{$search}%")
-                            ->orWhere('marca', 'like', "%{$search}%")
-                            ->orWhere('modelo', 'like', "%{$search}%");
+                        ->orWhere('marca', 'like', "%{$search}%")
+                        ->orWhere('modelo', 'like', "%{$search}%")
+                        ->orWhere('codigo_uts', 'like', "%{$search}%"); // Agregado según tu esquema
                     });
                 })
+                // Filtro por subcategoría lateral
                 ->when($subcategoriaId, function ($query) use ($subcategoriaId) {
                     $query->where('subcategoria_id', $subcategoriaId);
                 })
                 ->latest()
                 ->paginate(12)
-                ->withQueryString(); // Esto mantiene el filtro al cambiar de página
+                ->withQueryString();
+
+                /* dd($articulosDisponibles->toArray()); */
 
             return view('prestamo.index', compact('categorias', 'articulosDisponibles', 'search'));
         }
@@ -98,7 +104,7 @@ class PrestamoController extends Controller
 
         Prestamo::create([
             'articulo_id' => $articulo->id,
-            'usuario_solicitante_id' => auth()->id(),
+            'usuario_solicitante_id' => Auth::user()->id,
             'fecha_prestamo'         => now()->toDateTimeString(),
             'fecha_devolucion_estimada'  => now()->addHour()->addMinutes(30)->toDateTimeString(),
             'estado'  => 'Pendiente',
@@ -112,7 +118,12 @@ class PrestamoController extends Controller
      */
     public function misPrestamos()
     {
-        $misPrestamos = Prestamo::where('usuario_solicitante_id', auth()->id())->with('articulo')->latest()->paginate(10);
+
+        $misPrestamos = Prestamo::where('usuario_solicitante_id', Auth::user()->id)
+                                ->where('id_padre', '!=', null)
+                               ->with(['articulo', 'padre'])
+                                ->latest()
+                                ->paginate(10);
         return view('prestamo.mis-prestamos', compact('misPrestamos'));
     }
 
@@ -164,14 +175,14 @@ class PrestamoController extends Controller
 
         // Verificar disponibilidad del artículo
         if ($prestamo->articulo->estado !== 'disponible') {
-            // Podríamos permitir aprobar incluso si no está disponible, pero es riesgoso. 
+            // Podríamos permitir aprobar incluso si no está disponible, pero es riesgoso.
             // Asumimos que si se solicita, estaba disponible o se espera disponibilidad.
             // Sin embargo, para consistencia, actualizamos el estado del artículo.
         }
 
         $prestamo->update([
             'estado' => 'Activo',
-            'usuario_despacha_id' => auth()->id(),
+            'usuario_despacha_id' => Auth::user()->id,
             'fecha_prestamo' => now(), // Actualizamos la fecha de inicio al momento de aprobación real
         ]);
 
@@ -191,7 +202,7 @@ class PrestamoController extends Controller
 
         $prestamo->update([
             'estado' => 'Devuelto',
-            'usuario_recibe_id' => auth()->id(),
+            'usuario_recibe_id' => Auth::user()->id,
             'fecha_devolucion_real' => now(),
         ]);
 
@@ -211,12 +222,48 @@ class PrestamoController extends Controller
 
         // Si eliminamos una solicitud pendiente, aseguramos que el artículo quede disponible (ya debería estarlo, pero por seguridad)
         if ($prestamo->estado === 'Pendiente') {
-            // No es necesario cambiar estado del articulo porque en pendiente sigue disponible, 
+            // No es necesario cambiar estado del articulo porque en pendiente sigue disponible,
             // pero si la lógica cambiara, aquí sería el lugar.
         }
 
         $prestamo->delete();
 
         return back()->with('success', 'Registro de préstamo eliminado correctamente.');
+    }
+
+    public function procesarSolicitud(Request $request)
+    {
+        $carrito = session()->get('carrito', []);
+
+        if (empty($carrito)) {
+            return redirect()->back()->with('error', 'La solicitud está vacía.');
+        }
+
+        DB::transaction(function () use ($carrito) {
+            // 1. Crear el registro PADRE (la cabecera del préstamo)
+            $padre = Prestamo::create([
+                'usuario_solicitante_id' => Auth::id(),
+                'fecha_prestamo' => now(),
+                'fecha_devolucion_estimada' => now()->addHours(4), // Ejemplo
+                'estado' => 'Pendiente',
+                'id_padre' => null, // Es el jefe
+                'articulo_id' => null
+            ]);
+
+            // 2. Crear los registros HIJOS (cada artículo)
+            foreach ($carrito as $item) {
+                Prestamo::create([
+                    'id_padre' => $padre->id, // Vinculamos al padre
+                    'articulo_id' => $item['id'],
+                    'usuario_solicitante_id' => Auth::id(),
+                    'estado' => 'Pendiente',
+                    'fecha_prestamo' => $padre->fecha_prestamo,
+                    'fecha_devolucion_estimada' => $padre->fecha_devolucion_estimada,
+                ]);
+            }
+        });
+
+        session()->forget('carrito'); // Limpiamos el carrito
+        return redirect()->route('prestamos.mis-prestamos')->with('success', 'Solicitud enviada con éxito.');
     }
 }

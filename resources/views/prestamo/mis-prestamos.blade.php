@@ -9,7 +9,7 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
-                    
+
                     {{-- Mensaje de éxito cuando se solicita un préstamo --}}
                     @if(session('success'))
                         <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
@@ -44,12 +44,13 @@
                                         </td>
                                         <td class="px-6 py-4">
                                             {{-- Usa colores para identificar el estado --}}
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                                @if($prestamo->estado == 'solicitado') bg-blue-100 text-blue-800 @endif
-                                                @if($prestamo->estado == 'aprobado') bg-yellow-100 text-yellow-800 @endif
-                                                @if($prestamo->estado == 'devuelto') bg-green-100 text-green-800 @endif
-                                                @if($prestamo->estado == 'rechazado') bg-red-100 text-red-800 @endif">
-                                                {{ ucfirst($prestamo->estado) }}
+                                            <span @class(['px-2', 'inline-flex', 'text-xs', 'leading-5', 'font-semibold', 'rounded-full',
+                                                'bg-blue-100 text-blue-800' => $prestamo->estado == 'solicitado',
+                                                'bg-yellow-100 text-yellow-800' => $prestamo->estado == 'aprobado',
+                                                'bg-green-100 text-green-800' => $prestamo->estado == 'devuelto',
+                                                'bg-red-100 text-red-800' => $prestamo->estado == 'Activo'
+                                            ])>
+                                                {{ ucfirst($prestamo->padre->estado) }}
                                             </span>
                                         </td>
                                     </tr>
@@ -63,7 +64,7 @@
                             </tbody>
                         </table>
                     </div>
-                    
+
                     {{-- Paginación por si tienes muchos préstamos --}}
                     <div class="mt-4">
                         {{ $misPrestamos->links() }}

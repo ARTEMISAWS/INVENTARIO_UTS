@@ -29,8 +29,10 @@ class CarritoController extends Controller
     /**
      * Agrega un artículo al carrito.
      */
-    public function agregar(Articulo $articulo)
+    public function agregar($articulo_id)
     {
+        $data = Articulo::with('subcategoria.categoria')->where('id', $articulo_id)->first();
+
         // 1. Verificar si el usuario ya tiene un préstamo activo o pendiente
         $prestamoActivo = Prestamo::where('usuario_solicitante_id', Auth::id())
             ->whereIn('estado', ['Pendiente', 'Activo'])
@@ -40,34 +42,33 @@ class CarritoController extends Controller
             return back()->with('error', 'No puedes realizar una nueva solicitud mientras tengas un préstamo activo o pendiente.');
         }
 
+
         // 2. Obtener el carrito actual
         $carrito = Session::get('carrito', []);
-
         // 3. Verificar si el artículo ya está en el carrito
-        if (isset($carrito[$articulo->id])) {
+        if (isset($carrito[$data->id])) {
             return back()->with('info', 'El artículo ya está en tu lista de solicitud.');
         }
-
         // 4. Verificar restricción: 1 artículo por categoría
         foreach ($carrito as $id => $item) {
             // Nota: Guardamos categoria_id en el carrito para facilitar esta validación sin consultar DB
-            if ($item['categoria_id'] == $articulo->categoria_id) {
-                return back()->with('error', 'Solo puedes solicitar un artículo por categoría en cada préstamo. Ya tienes un artículo de la categoría: ' . $articulo->categoria->nombre);
+            if ($item['subcategoria_id'] == $data->subcategoria_id) {
+                return back()->with('error', 'Solo puedes solicitar un artículo por categoría en cada préstamo. Ya tienes un artículo de la categoría: ' . $data->subcategoria->nombre);
             }
         }
 
         // 5. Agregar al carrito
-        $carrito[$articulo->id] = [
-            'nombre' => $articulo->nombre,
-            'marca' => $articulo->marca,
-            'modelo' => $articulo->modelo,
-            'categoria_id' => $articulo->categoria_id,
-            'categoria_nombre' => $articulo->categoria->nombre,
-            'imagen' => $articulo->imagen // Si tienes imágenes
+        $carrito[$data->id] = [
+            'id' => $data->id,
+            'nombre' => $data->nombre,
+            'marca' => $data->marca,
+            'modelo' => $data->modelo,
+            'subcategoria_id' => $data->subcategoria_id,
+            'categoria_id' => $data->subcategoria->categoria->id,
+            'categoria_nombre' => $data->subcategoria->categoria->nombre,
+            'subcategoria_nombre' => $data->subcategoria->nombre,
         ];
-
         Session::put('carrito', $carrito);
-
         return back()->with('success', 'Artículo agregado a la solicitud.');
     }
 
