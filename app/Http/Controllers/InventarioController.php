@@ -67,7 +67,19 @@ class InventarioController extends Controller
             'subcategoria_id' => 'required|exists:subcategorias,id',
             'ubicacion_id' => 'required|exists:ubicaciones,id',
         ]);
-        Articulo::create($request->all());
+
+        $articulo = Articulo::create($request->all());
+
+        if ($articulo->subcategoria_id) {
+            $subcategoria = Subcategoria::find($articulo->subcategoria_id);
+            if ($subcategoria) {
+                $subcategoria->increment('cantidad');
+                if ($subcategoria->categoria_id) {
+                    Categoria::where('id', $subcategoria->categoria_id)->increment('cantidad');
+                }
+            }
+        }
+
         return redirect()->route('inventario.index')->with('success', 'Artículo creado exitosamente.');
     }
 
@@ -96,13 +108,38 @@ class InventarioController extends Controller
             'marca' => 'nullable|string|max:255',
             'modelo' => 'nullable|string|max:255',
             'numero_serie' => 'nullable|string|max:255|unique:articulos,numero_serie,' . $idArticulo,
-            'categoria_id' => 'required|exists:categorias,id',
+            'subcategoria_id' => 'required|exists:subcategorias,id',
             'ubicacion_id' => 'required|exists:ubicaciones,id',
             'estado' => 'required|in:disponible,prestado,en_mantenimiento,de_baja',
         ]);
+
         $articulo = Articulo::find($idArticulo);
+        $oldSubcatId = $articulo->subcategoria_id;
+
         $articulo->fill($request->all());
         $articulo->save();
+
+        if ($oldSubcatId != $articulo->subcategoria_id) {
+            if ($oldSubcatId) {
+                $oldSub = Subcategoria::find($oldSubcatId);
+                if ($oldSub) {
+                    $oldSub->decrement('cantidad');
+                    if ($oldSub->categoria_id) {
+                        Categoria::where('id', $oldSub->categoria_id)->decrement('cantidad');
+                    }
+                }
+            }
+            if ($articulo->subcategoria_id) {
+                $newSub = Subcategoria::find($articulo->subcategoria_id);
+                if ($newSub) {
+                    $newSub->increment('cantidad');
+                    if ($newSub->categoria_id) {
+                        Categoria::where('id', $newSub->categoria_id)->increment('cantidad');
+                    }
+                }
+            }
+        }
+
         return redirect()->route('inventario.index')->with('success', 'Artículo actualizado exitosamente.');
     }
 
@@ -126,6 +163,17 @@ class InventarioController extends Controller
 
             $articulo->estado = 'inactivo';
             $articulo->save();
+
+            if ($articulo->subcategoria_id) {
+                $subcategoria = Subcategoria::find($articulo->subcategoria_id);
+                if ($subcategoria) {
+                    $subcategoria->decrement('cantidad');
+                    if ($subcategoria->categoria_id) {
+                        Categoria::where('id', $subcategoria->categoria_id)->decrement('cantidad');
+                    }
+                }
+            }
+
             return redirect()->route('inventario.index')->with('success', 'Artículo eliminado exitosamente.');
         } catch (\Exception $e) {
             return back()->with('error', 'Ocurrió un error al intentar eliminar el artículo.');

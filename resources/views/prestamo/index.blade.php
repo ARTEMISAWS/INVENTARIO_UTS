@@ -22,14 +22,26 @@
                 <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4">
                     <h3 class="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100 border-b pb-2">Categorías</h3>
 
-                    <div x-data="{ activeAccordion: null }">
+                    @php
+                        $activeCategoryId = 'null';
+                        $currentSubId = request()->route('subcategoria') ?? request('subcategoria');
+                        if($currentSubId) {
+                            foreach($categorias as $cat) {
+                                if($cat->subcategorias->contains('id', $currentSubId)) {
+                                    $activeCategoryId = $cat->id;
+                                    break;
+                                }
+                            }
+                        }
+                    @endphp
+                    <div x-data="{ activeAccordion: {{ $activeCategoryId }} }">
                         @foreach($categorias as $categoria)
                         <div class="mb-2">
                             <button @click="activeAccordion = (activeAccordion === {{ $categoria->id }} ? null : {{ $categoria->id }})"
                                 class="flex justify-between items-center w-full text-left px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-900 transition">
                                 <span class="font-medium text-gray-700 dark:text-gray-200">
                                     {{ $categoria->nombre }}
-                                    <span class="text-xs bg-gray-300 dark:bg-gray-600 px-2 py-0.5 rounded-full ml-1">{{ $categoria->subcategorias->sum('cantidad') }}</span>
+                                    <span class="text-xs bg-gray-300 dark:bg-gray-600 px-2 py-0.5 rounded-full ml-1">{{ $categoria->subcategorias->sum('cantidad_disponible') }}</span>
                                 </span>
                                 <svg :class="activeAccordion === {{ $categoria->id }} ? 'rotate-180' : ''" class="w-4 h-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -41,7 +53,7 @@
                                 <a href="{{ route('prestamos.index', $sub->id) }}"
                                     class="flex justify-between items-center text-sm p-2 rounded hover:bg-indigo-100 dark:hover:bg-gray-600 {{ request('subcategoria') == $sub->id ? 'bg-indigo-200 dark:bg-indigo-800 font-bold' : 'text-gray-600 dark:text-gray-400' }}">
                                     <span>{{ $sub->nombre }}</span>
-                                    <span class="text-xs text-gray-500">({{ $sub->cantidad }})</span>
+                                    <span class="text-xs text-gray-500">({{ $sub->cantidad_disponible }})</span>
                                 </a>
                                 @endforeach
                             </div>

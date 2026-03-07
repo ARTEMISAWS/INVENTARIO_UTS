@@ -120,8 +120,8 @@ class PrestamoController extends Controller
     {
 
         $misPrestamos = Prestamo::where('usuario_solicitante_id', Auth::user()->id)
-            ->where('id_padre', '!=', null)
-            ->with(['articulo', 'padre'])
+            ->where('id_padre', null)
+            ->where('articulo_id', null)
             ->latest()
             ->paginate(10);
         return view('prestamo.mis-prestamos', compact('misPrestamos'));

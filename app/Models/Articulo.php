@@ -9,6 +9,8 @@ class Articulo extends Model
 {
     use HasFactory;
 
+
+
     /**
      * La tabla asociada con el modelo.
      *

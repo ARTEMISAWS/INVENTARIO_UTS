@@ -9,7 +9,7 @@ class Subcategoria extends Model
 {
     use HasFactory;
     protected $table = 'subcategorias';
-    protected $fillable = ['nombre', 'categoria_id', 'descripcion', 'cantidad'];
+    protected $fillable = ['nombre', 'categoria_id', 'cantidad'];
 
     // Relación inversa con Categoria
     public function categoria()

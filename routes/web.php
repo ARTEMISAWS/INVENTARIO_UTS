@@ -5,6 +5,8 @@ use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\PrestamoController;
 use App\Http\Controllers\ArticulosdañadosController;
 use App\Http\Controllers\UsuariosController;
+use App\Http\Controllers\CategoriaController;
+use App\Http\Controllers\SubCategoriaController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -46,6 +48,8 @@ Route::middleware(['auth', 'role:admin,superadmin'])->group(function () {
     Route::resource('prestamo', PrestamoController::class);
     Route::resource('articulosdañados', ArticulosdañadosController::class);
     Route::resource('usuarios', UsuariosController::class);
+    Route::resource('categorias', CategoriaController::class);
+    Route::resource('subcategorias', SubCategoriaController::class);
 
     // --- RUTAS DE APROBACIÓN ---
     Route::post('/prestamo/vistaAprobacion', [PrestamoController::class, 'vistaAprobacion'])->name('prestamos.vistaAprobacion');
